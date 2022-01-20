@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from dataclasses import is_dataclass
-from dataclasses_io.core import get_config, save_json, load_json
+from dataclasses_io.core import get_config, save_json, load_json, save_yaml, load_yaml
 
 
 __all__ = ["dataclass_io"]
@@ -12,6 +12,8 @@ def _process_class(cls):
         setattr(cls, "config", property(get_config, None, None, None))
         setattr(cls, "save_json", save_json)
         setattr(cls, "load_json", load_json)
+        setattr(cls, "save_yaml", save_yaml)
+        setattr(cls, "load_yaml", load_yaml)
     return cls
 
 
