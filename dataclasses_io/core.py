@@ -1,11 +1,24 @@
 # -*- coding: utf-8 -*-
 
+from dataclasses_io.utils import _validate_path_format, _validate_path_type
+
 import json
 import yaml
+
+from os import PathLike
 from pathlib import Path
+from typing import Union
 
 
-__all__ = ["get_config", "save_json", "load_json", "save_yaml", "load_yaml"]
+__all__ = [
+    "get_config",
+    "save",
+    "save_json",
+    "save_yaml",
+    "load",
+    "load_json",
+    "load_yaml",
+]
 
 
 def get_config(self):
@@ -13,69 +26,92 @@ def get_config(self):
     return {field: getattr(self, field) for field in fields}
 
 
-def save_json(self, path, encoding: str = "utf-8", overwrite: bool = False):
-    if (path := Path(path)).suffix != ".json":
-        raise ValueError
-    if not (root := path.parent).exists():
-        root.mkdir(parents=True, exist_ok=True)
-
-    json_key = self.__class__.__name__
-    contents = {json_key: self.config}
-
-    if not path.exists():
-        with path.open("w", encoding=encoding) as json_file:
-            json.dump(contents, json_file, indent=4)
-    elif path.is_file():
-        with path.open("r", encoding=encoding) as json_file:
-            json_data = json.load(json_file)
-        if json_key not in json_data or overwrite:
-            with path.open("w", encoding=encoding) as json_file:
-                json.dump(json_data | contents, json_file, indent=4)
-    else:
+def save(
+    self,
+    path: Union[str, Path, PathLike],
+    encoding: str = "utf-8",
+    overwrite: bool = False,
+    format: Union[str, None] = None,
+):
+    path = _validate_path_type(path)
+    if path.exists() and not path.is_file():
         raise FileExistsError
 
-
-def save_yaml(self, path, encoding: str = "utf-8", overwrite: bool = False):
-    if (path := Path(path)).suffix not in (".yml", ".yaml"):
-        raise ValueError
-    if not (root := path.parent).exists():
+    root = path.parent
+    if not root.exists():
         root.mkdir(parents=True, exist_ok=True)
 
-    yaml_key = self.__class__.__name__
-    contents = {yaml_key: self.config}
+    cls_name = self.__class__.__name__
+    contents = {cls_name: self.config}
 
-    if not path.exists():
-        with path.open("w", encoding=encoding) as yaml_file:
-            yaml.dump(contents, yaml_file, indent=4)
-    elif path.is_file():
-        with path.open("r", encoding=encoding) as yaml_file:
-            yaml_data = yaml.load(yaml_file)
-        if yaml_key not in yaml_data or overwrite:
-            with path.open("w", encoding=encoding) as yaml_file:
-                yaml.dump(yaml_data | contents, yaml_file, indent=4)
-    else:
-        raise FileExistsError
+    format = _validate_path_format(path, format)
+    file_data = {}
+    if path.is_file():
+        with path.open("r", encoding=encoding) as file:
+            if format == "json":
+                file_data = json.load(file)
+            elif format == "yaml":
+                file_data = yaml.load(file, Loader=yaml.FullLoader)
+            if cls_name not in file_data or overwrite:
+                contents = file_data | contents
+
+    with path.open("w", encoding=encoding) as file:
+        if cls_name not in file_data or overwrite:
+            contents = file_data | contents
+        if format == "json":
+            json.dump(contents, file, indent=4)
+        elif format == "yaml":
+            yaml.dump(contents, file, indent=4)
+
+
+def save_json(
+    self,
+    path: Union[str, Path, PathLike],
+    encoding: str = "utf-8",
+    overwrite: bool = False,
+):
+    self.save(path, encoding, overwrite, format="json")
+
+
+def save_yaml(
+    self,
+    path: Union[str, Path, PathLike],
+    encoding: str = "utf-8",
+    overwrite: bool = False,
+):
+    self.save(path, encoding, overwrite, format="yaml")
 
 
 @classmethod
-def load_json(cls, path, encoding: str = "utf-8"):
-    path = Path(path)
-    if not (path.is_file() and path.suffix == ".json"):
+def load(
+    cls,
+    path: Union[str, Path, PathLike],
+    encoding: str = "utf-8",
+    format: Union[str, None] = None,
+):
+    path = _validate_path_type(path)
+    if not path.exists():
         raise FileNotFoundError
-    else:
-        with path.open("r", encoding=encoding) as json_file:
-            json_data = json.load(json_file)[cls.__name__]
-            kwargs = {k: v for k, v in json_data.items()}
-            return cls(**kwargs)
+    elif not path.is_file():
+        raise FileExistsError
+
+    format = _validate_path_format(path, format)
+    with path.open("r", encoding=encoding) as file:
+        kwargs = {}
+        if format == "json":
+            file_data = json.load(file)[cls.__name__]
+            kwargs = {k: v for k, v in file_data.items()}
+        elif format == "yaml":
+            file_data = yaml.load(file, Loader=yaml.FullLoader)[cls.__name__]
+            kwargs = {k: v for k, v in file_data.items()}
+        return cls(**kwargs)
 
 
 @classmethod
-def load_yaml(cls, path, encoding: str = "utf-8"):
-    path = Path(path)
-    if not (path.is_file() and path.suffix in (".yml", ".yaml")):
-        raise FileNotFoundError
-    else:
-        with path.open("r", encoding=encoding) as yaml_file:
-            yaml_data = yaml.load(yaml_file)[cls.__name__]
-            kwargs = {k: v for k, v in yaml_data.items()}
-            return cls(**kwargs)
+def load_json(cls, path: Union[str, Path, PathLike], encoding: str = "utf-8"):
+    return cls.load(path, encoding, format="json")
+
+
+@classmethod
+def load_yaml(cls, path: Union[str, Path, PathLike], encoding: str = "utf-8"):
+    return cls.load(path, encoding, format="yaml")
