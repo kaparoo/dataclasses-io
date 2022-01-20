@@ -9,7 +9,7 @@ __all__ = ["dataclass_io"]
 
 def _process_class(cls):
     if is_dataclass(cls):
-        setattr(cls, "config", property(get_config, None, None, None))
+        setattr(cls, "config", property(get_config))
         setattr(cls, "save_json", save_json)
         setattr(cls, "load_json", load_json)
         setattr(cls, "save_yaml", save_yaml)
