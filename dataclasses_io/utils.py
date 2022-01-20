@@ -18,21 +18,30 @@ _SUFFIX_TO_FORMAT = {
 }
 
 
-def _validate_path_format(path: Path, target: Union[str, None] = None) -> str:
+def _validate_path_format(path: Path, format: Union[str, None] = None) -> str:
     try:
-        format = _SUFFIX_TO_FORMAT[path.suffix]
+        path_format = _SUFFIX_TO_FORMAT[path.suffix]
     except KeyError:
-        raise ValueError
+        raise ValueError("invalid suffix: %s" % path.suffix)
 
-    if isinstance(target, str):
-        if target not in _VALID_FORMATS or target != format:
-            raise ValueError
-    elif target is not None:
-        raise TypeError
-    return format
+    if isinstance(format, str):
+        if format not in _VALID_FORMATS:
+            raise ValueError("`format` must be one of %s" % _VALID_FORMATS)
+        elif format != path_format:
+            raise ValueError("expected %s file, not %s" % (format, path_format))
+    elif format is not None:
+        raise TypeError(
+            "`format` expected str or NoneType object, not %s"
+            % format.__class__.__name__
+        )
+
+    return path_format
 
 
 def _validate_path_type(path: Any) -> Path:
     if not isinstance(path, (str, PathLike, Path)):
-        raise TypeError
+        raise TypeError(
+            "`path` expected str, os.PathLike or pathlib.Path object, not %s"
+            % path.__class__.__name__
+        )
     return Path(path)

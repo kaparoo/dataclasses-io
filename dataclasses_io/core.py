@@ -29,13 +29,15 @@ def get_config(self):
 def save(
     self,
     path: Union[str, Path, PathLike],
-    encoding: str = "utf-8",
     overwrite: bool = False,
+    encoding: str = "utf-8",
     format: Union[str, None] = None,
 ):
     path = _validate_path_type(path)
     if path.exists() and not path.is_file():
-        raise FileExistsError
+        raise FileExistsError("not regular file: %s" % path)
+
+    format = _validate_path_format(path, format)
 
     root = path.parent
     if not root.exists():
@@ -44,10 +46,9 @@ def save(
     cls_name = self.__class__.__name__
     contents = {cls_name: self.config}
 
-    format = _validate_path_format(path, format)
-    file_data = {}
     if path.is_file():
         with path.open("r", encoding=encoding) as file:
+            file_data = {}
             if format == "json":
                 file_data = json.load(file)
             elif format == "yaml":
@@ -56,8 +57,6 @@ def save(
                 contents = file_data | contents
 
     with path.open("w", encoding=encoding) as file:
-        if cls_name not in file_data or overwrite:
-            contents = file_data | contents
         if format == "json":
             json.dump(contents, file, indent=4)
         elif format == "yaml":
@@ -67,19 +66,19 @@ def save(
 def save_json(
     self,
     path: Union[str, Path, PathLike],
-    encoding: str = "utf-8",
     overwrite: bool = False,
+    encoding: str = "utf-8",
 ):
-    self.save(path, encoding, overwrite, format="json")
+    self.save(path, overwrite, encoding, format="json")
 
 
 def save_yaml(
     self,
     path: Union[str, Path, PathLike],
-    encoding: str = "utf-8",
     overwrite: bool = False,
+    encoding: str = "utf-8",
 ):
-    self.save(path, encoding, overwrite, format="yaml")
+    self.save(path, overwrite, encoding, format="yaml")
 
 
 @classmethod
@@ -91,19 +90,19 @@ def load(
 ):
     path = _validate_path_type(path)
     if not path.exists():
-        raise FileNotFoundError
+        raise FileNotFoundError("no such file %s" % path)
     elif not path.is_file():
-        raise FileExistsError
+        raise FileExistsError("not regular file: %s" % path)
 
     format = _validate_path_format(path, format)
     with path.open("r", encoding=encoding) as file:
-        kwargs = {}
+        file_data = {}
         if format == "json":
-            file_data = json.load(file)[cls.__name__]
-            kwargs = {k: v for k, v in file_data.items()}
+            file_data = json.load(file)
         elif format == "yaml":
-            file_data = yaml.load(file, Loader=yaml.FullLoader)[cls.__name__]
-            kwargs = {k: v for k, v in file_data.items()}
+            file_data = yaml.load(file, Loader=yaml.FullLoader)
+        file_data = file_data[cls.__name__]
+        kwargs = {k: v for k, v in file_data.items()}
         return cls(**kwargs)
 
 
