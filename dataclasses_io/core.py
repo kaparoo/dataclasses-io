@@ -7,7 +7,7 @@ import yaml
 
 from os import PathLike
 from pathlib import Path
-from typing import Union
+from typing import Optional, Literal, Union
 
 
 __all__ = [
@@ -21,6 +21,10 @@ __all__ = [
 ]
 
 
+FormatType = Literal["json", "yaml"]
+PathType = Union[str, Path, PathLike]
+
+
 def get_config(self):
     fields = (field for field in self.__dataclass_fields__)
     return {field: getattr(self, field) for field in fields}
@@ -28,10 +32,10 @@ def get_config(self):
 
 def save(
     self,
-    path: Union[str, Path, PathLike],
+    path: PathType,
     overwrite: bool = False,
-    encoding: str = "utf-8",
-    format: Union[str, None] = None,
+    encoding: Optional[str] = None,
+    format: Optional[FormatType] = None,
 ):
     path = _validate_path_type(path)
     if path.exists() and not path.is_file():
@@ -65,18 +69,18 @@ def save(
 
 def save_json(
     self,
-    path: Union[str, Path, PathLike],
+    path: PathType,
     overwrite: bool = False,
-    encoding: str = "utf-8",
+    encoding: Optional[str] = None,
 ):
     self.save(path, overwrite, encoding, format="json")
 
 
 def save_yaml(
     self,
-    path: Union[str, Path, PathLike],
+    path: PathType,
     overwrite: bool = False,
-    encoding: str = "utf-8",
+    encoding: Optional[str] = None,
 ):
     self.save(path, overwrite, encoding, format="yaml")
 
@@ -84,9 +88,9 @@ def save_yaml(
 @classmethod
 def load(
     cls,
-    path: Union[str, Path, PathLike],
-    encoding: str = "utf-8",
-    format: Union[str, None] = None,
+    path: PathType,
+    encoding: Optional[str] = None,
+    format: Optional[FormatType] = None,
 ):
     path = _validate_path_type(path)
     if not path.exists():
@@ -107,10 +111,10 @@ def load(
 
 
 @classmethod
-def load_json(cls, path: Union[str, Path, PathLike], encoding: str = "utf-8"):
+def load_json(cls, path: PathType, encoding: Optional[str] = None):
     return cls.load(path, encoding, format="json")
 
 
 @classmethod
-def load_yaml(cls, path: Union[str, Path, PathLike], encoding: str = "utf-8"):
+def load_yaml(cls, path: PathType, encoding: Optional[str] = None):
     return cls.load(path, encoding, format="yaml")

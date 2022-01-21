@@ -2,7 +2,7 @@
 
 from os import PathLike
 from pathlib import Path
-from typing import Any, Union
+from typing import Any, Optional
 
 
 __all__ = ["_validate_path_format", "_validate_path_type"]
@@ -18,7 +18,7 @@ _SUFFIX_TO_FORMAT = {
 }
 
 
-def _validate_path_format(path: Path, format: Union[str, None] = None) -> str:
+def _validate_path_format(path: Path, format: Optional[str] = None) -> str:
     try:
         path_format = _SUFFIX_TO_FORMAT[path.suffix]
     except KeyError:
