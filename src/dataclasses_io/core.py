@@ -58,7 +58,7 @@ def save(
             elif format == "yaml":
                 file_data = yaml.load(file, Loader=yaml.FullLoader)
             if cls_name not in file_data or overwrite:
-                contents = file_data | contents
+                contents = file_data.update(contents)
 
     with path.open("w", encoding=encoding) as file:
         if format == "json":
