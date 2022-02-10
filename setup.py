@@ -16,6 +16,7 @@ setup(
     keywords=["dataclasses", "json", "yaml"],
     license="MIT",
     url="https://github.com/kaparoo/dataclasses-io",
+    download_url="https://github.com/kaparoo/dataclasses-io/dist/dataclases-io-0.0.5.tar.gz",
     classifiers=[
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
