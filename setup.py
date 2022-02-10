@@ -12,7 +12,7 @@ setup(
     author_email="kaparoo2001@gmail.com",
     description="Supports save/load APIs for dataclasses",
     long_description=readme,
-    long_description_content_type="test/markdown",
+    long_description_content_type="text/markdown",
     keywords=["dataclasses", "json", "yaml"],
     license="MIT",
     url="https://github.com/kaparoo/dataclasses-io",
