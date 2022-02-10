@@ -28,6 +28,8 @@ def _process_class(cls):
 
 
 def dataclass_io(cls=None):
+    """Supports save/load APIs for dataclasses."""
+
     def wrap(cls):
         return _process_class(cls)
 
